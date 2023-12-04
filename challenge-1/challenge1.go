@@ -1,68 +1,57 @@
-package main
+package test
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
 )
 
-func main() {
+func GetCalibrationValues() (int, error) {
 	apiURL := "https://adventofcode.com/2023/day/1/input"
 
-	sessionString := "<SESSION>"
+	sessionString := "53616c7465645f5feaa5ad72951c8b6a5127dd46c94b625c05b2796e83e75c0c80699ea2265895f2fc5991d5bc4a49944d4acf3224a42d0dc87ba5be4fe01048"
 
 	client := &http.Client{}
 
 	req, err := http.NewRequest("GET", apiURL, nil)
 	if err != nil {
-		fmt.Println("Error creating request:", err)
-		os.Exit(1)
+		return 0, fmt.Errorf("error creating request: %w", err)
 	}
 
 	req.Header.Set("Cookie", "session="+sessionString)
-	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Error making request:", err)
-		os.Exit(1)
+		return 0, fmt.Errorf("error making request: %w", err)
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println("Error making request:", err)
-		os.Exit(1)
+		return 0, fmt.Errorf("error reading body: %w", err)
 	}
 
 	lines := strings.Split(string(body), "\n")
 
 	sum := 0
 	for _, line := range lines {
-		fmt.Println(line)
 		nums := regexp.MustCompile("[^0-9]").ReplaceAllString(line, "")
 
 		runes := []rune(nums)
 
 		firstSubstring := string(runes[:1])
 
-		if err != nil {
-			fmt.Println(err)
-		}
-
 		lastSubstring := firstSubstring
 		if len(runes) > 1 {
 			lastSubstring = string(runes[len(runes)-1:])
 		}
 
-		combined := fmt.Sprintf("%s%s", firstSubstring, lastSubstring)
-		combinedNum, _ := strconv.Atoi(combined)
+		combinedNum, _ := strconv.Atoi(fmt.Sprintf("%s%s", firstSubstring, lastSubstring))
 		sum += combinedNum
 	}
 
-	fmt.Println(sum)
+	return sum, nil
 }
